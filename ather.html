@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>نادي أثر</title>
+
+<style>
+body{
+margin:0;
+background:#0f1720;
+color:white;
+font-family:Tajawal;
+text-align:center;
+}
+
+.container{
+position:relative;
+width:80vw;
+max-width:700px;
+margin:auto;
+}
+
+
+video{
+width:100%;
+border-radius:18px;
+transform:scaleX(-1);
+}
+
+
+.overlay{
+position:absolute;
+top:20px;
+width:100%;
+z-index:3;
+}
+
+.phrase{
+background:rgba(0,0,0,0.6);
+display:inline-block;
+padding:10px 15px;
+border-radius:10px;
+font-size:1.4rem;
+
+opacity:0;
+transform:translateY(10px);
+transition:0.6s ease;
+}
+
+.phrase.show{
+opacity:1;
+transform:translateY(0);
+}
+
+
+.logo{
+position:absolute;
+top:10px;
+right:10px;
+z-index:5;
+}
+
+.logo img{
+width:80px;
+height:80px;
+object-fit:contain;
+border-radius:50%;
+background:rgba(255,255,255,0.05);
+border:2px solid rgba(255,255,255,0.2);
+box-shadow:0 0 18px rgba(40,181,143,0.35);
+padding:6px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>نادي أثر</h2>
+<p>حرّك يدك أمام الكاميرا </p>
+
+<div class="container">
+
+
+<div class="logo">
+<img src="أثر مفرغ ٣.png" alt="شعار نادي أثر">
+</div>
+
+<video id="video" autoplay></video>
+
+<div class="overlay">
+<div class="phrase" id="phrase">ابدأ الحركة</div>
+</div>
+
+</div>
+
+<script>
+const video = document.getElementById("video");
+const phrase = document.getElementById("phrase");
+
+const DATA = [
+"التقنية لا تصنع الأثر … نحن من نفعل",
+"كل سطر كود … فرصة ليبقى شيء منك",
+"الأثر الحقيقي … هو ما يستمر بعدك"
+];
+
+let lastFrame = null;
+let index = 0;
+let lastChange = 0;
+
+
+navigator.mediaDevices.getUserMedia({video:true}).then(stream=>{
+video.srcObject = stream;
+});
+
+
+function detectMotion(){
+
+if(video.readyState < 2){
+requestAnimationFrame(detectMotion);
+return;
+}
+
+const canvas = document.createElement("canvas");
+const ctx = canvas.getContext("2d");
+
+canvas.width = video.videoWidth;
+canvas.height = video.videoHeight;
+
+ctx.drawImage(video,0,0);
+const frame = ctx.getImageData(0,0,canvas.width,canvas.height);
+
+if(lastFrame){
+
+let diff = 0;
+
+for(let i=0;i<frame.data.length;i+=80){
+diff += Math.abs(frame.data[i] - lastFrame.data[i]);
+}
+
+
+if(diff > 22000 && Date.now() - lastChange > 1200){
+
+lastChange = Date.now();
+
+index = (index + 1) % DATA.length;
+
+phrase.classList.remove("show");
+
+setTimeout(()=>{
+phrase.textContent = DATA[index];
+phrase.classList.add("show");
+},200);
+}
+}
+
+lastFrame = frame;
+requestAnimationFrame(detectMotion);
+}
+
+video.onplay = ()=>{
+detectMotion();
+};
+
+
+setTimeout(()=>{
+phrase.classList.add("show");
+},300);
+</script>
+
+</body>
+</html>
